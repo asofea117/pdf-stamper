@@ -19,17 +19,19 @@ app.post('/stamp-pdf', upload.fields([
     const pages = pdfDoc.getPages();
     const lastPage = pages[pages.length - 1];
 
+    // Scale image proportionally to fit target width while keeping true aspect ratio
+    const targetWidth = 523; // Max width on page
+    const sigDims = sigImage.scale(targetWidth / sigImage.width);
+
     // Position coordinates (in points, 72 points = 1 inch)
     const xPosition = 36;   
     const yPosition = 36;   
-    const sigWidth = 523;   
-    const sigHeight = 120;  
 
     lastPage.drawImage(sigImage, {
       x: xPosition,
       y: yPosition,
-      width: sigWidth,
-      height: sigHeight,
+      width: sigDims.width,
+      height: sigDims.height,
     });
 
     const modifiedPdfBytes = await pdfDoc.save();
