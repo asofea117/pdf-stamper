@@ -25,7 +25,7 @@ app.post('/stamp-pdf', upload.fields([
 
     // Position coordinates (in points, 72 points = 1 inch)
     const xPosition = 36;   
-    const yPosition = 36;   
+    const yPosition = 15;   
 
     lastPage.drawImage(sigImage, {
       x: xPosition,
