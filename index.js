@@ -19,8 +19,8 @@ app.post('/stamp-pdf', upload.any(), async (req, res) => {
     const pdfBuffer = pdfFile.buffer;
     const sigBuffer = sigFile.buffer;
     
-    // Total quantity string sent from Apps Script (e.g., "548.00 UNIT")
-    const totalQty = req.body.totalQty || '0.00 UNIT';
+    // Extract total quantity sent from Apps Script (checks key variations)
+    const totalQty = req.body.totalQty || req.body.totalqty || '0.00 UNIT';
 
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     const sigImage = await pdfDoc.embedPng(sigBuffer);
@@ -50,9 +50,9 @@ app.post('/stamp-pdf', upload.any(), async (req, res) => {
     });
 
     // 2. Draw Total Qty text right below the line
-    lastPage.drawText(`Total : ${totalQty}`, {
-      x: width - 180,
-      y: lineY - 14, // Placed below lineY so it sits neatly in the pink target area
+    lastPage.drawText(`Total Qty : ${totalQty}`, {
+      x: width - 210, // Shifted left to fit the longer "Total Qty :" label cleanly
+      y: lineY - 14, 
       size: 10,
       font: helveticaBold,
       color: rgb(0, 0, 0),
