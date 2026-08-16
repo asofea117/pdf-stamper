@@ -40,12 +40,15 @@ app.post('/stamp-pdf', upload.any(), async (req, res) => {
     const lastPage = pages[pages.length - 1];
     const { width } = lastPage.getSize();
 
+    // Scale image proportionally
     const targetWidth = 523;
     const sigDims = sigImage.scale(targetWidth / sigImage.width);
 
+    // Signature stamp placement (yPosition=81 keeps top aligned for 1958x583 crop)
     const xPosition = 36;   
-    const yPosition = 81;
+    const yPosition = 81; 
 
+    // --- DRAW LINE AND TOTAL QTY ABOVE STAMP ZONE ---
     const lineY = 270; 
 
     lastPage.drawLine({
@@ -62,7 +65,9 @@ app.post('/stamp-pdf', upload.any(), async (req, res) => {
       font: helveticaBold,
       color: rgb(0, 0, 0),
     });
+    // ------------------------------------------------
 
+    // Draw the signature/stamp image
     lastPage.drawImage(sigImage, {
       x: xPosition,
       y: yPosition,
@@ -75,7 +80,6 @@ app.post('/stamp-pdf', upload.any(), async (req, res) => {
     res.send(Buffer.from(modifiedPdfBytes));
 
   } catch (error) {
-    // LOG THE ACTUAL ERROR TO RENDER CONSOLE
     console.error('Detailed Stamping Error:', error.stack || error);
     res.status(500).send(`Error processing PDF signature stamping: ${error.message}`);
   }
