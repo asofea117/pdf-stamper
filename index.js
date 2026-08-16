@@ -5,16 +5,22 @@ const multer = require('multer');
 const app = express();
 const upload = multer();
 
-app.post('/stamp-pdf', upload.fields([
-  { name: 'pdf', maxCount: 1 },
-  { name: 'signature', maxCount: 1 }
-]), async (req, res) => {
+// Using upload.any() ensures multer parses both files and req.body text fields reliably
+app.post('/stamp-pdf', upload.any(), async (req, res) => {
   try {
-    const pdfBuffer = req.files['pdf'][0].buffer;
-    const sigBuffer = req.files['signature'][0].buffer;
+    // Extract files from req.files array
+    const pdfFile = req.files.find(f => f.fieldname === 'pdf');
+    const sigFile = req.files.find(f => f.fieldname === 'signature');
+
+    if (!pdfFile || !sigFile) {
+      return res.status(400).send('Missing required pdf or signature files.');
+    }
+
+    const pdfBuffer = pdfFile.buffer;
+    const sigBuffer = sigFile.buffer;
     
     // Total quantity string sent from Apps Script (e.g., "548.00 UNIT")
-    const totalQty = req.body.totalQty || '';
+    const totalQty = req.body.totalQty || '0.00 UNIT';
 
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     const sigImage = await pdfDoc.embedPng(sigBuffer);
@@ -33,7 +39,6 @@ app.post('/stamp-pdf', upload.fields([
     const yPosition = 15;   
 
     // --- DRAW LINE AND TOTAL QTY ABOVE STAMP ZONE ---
-    // Raised lineY to 270 so it sits ABOVE "Goods Received in Good Condition and Order"
     const lineY = 270; 
 
     // 1. Draw horizontal line across page margins
@@ -44,16 +49,14 @@ app.post('/stamp-pdf', upload.fields([
       color: rgb(0, 0, 0),
     });
 
-    // 2. Draw Total Qty text right above the line
-    if (totalQty) {
-      lastPage.drawText(`Total : ${totalQty}`, {
-        x: width - 180,
-        y: lineY + 8,
-        size: 10,
-        font: helveticaBold,
-        color: rgb(0, 0, 0),
-      });
-    }
+    // 2. Draw Total Qty text right below the line
+    lastPage.drawText(`Total : ${totalQty}`, {
+      x: width - 180,
+      y: lineY - 14, // Placed below lineY so it sits neatly in the pink target area
+      size: 10,
+      font: helveticaBold,
+      color: rgb(0, 0, 0),
+    });
     // ------------------------------------------------
 
     // Draw the signature/stamp image below the line
