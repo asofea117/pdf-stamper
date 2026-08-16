@@ -1,5 +1,5 @@
 const express = require('express');
-const { PDFDocument, rgb } = require('pdf-lib'); // Added rgb here
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const multer = require('multer');
 
 const app = express();
@@ -13,26 +13,28 @@ app.post('/stamp-pdf', upload.fields([
     const pdfBuffer = req.files['pdf'][0].buffer;
     const sigBuffer = req.files['signature'][0].buffer;
     
-    // Extract totalQty from form data body (fallback to empty if not passed)
+    // Total quantity string sent from Apps Script (e.g., "548.00 UNIT")
     const totalQty = req.body.totalQty || '';
 
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     const sigImage = await pdfDoc.embedPng(sigBuffer);
+    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
     const pages = pdfDoc.getPages();
     const lastPage = pages[pages.length - 1];
     const { width } = lastPage.getSize();
 
-    // Scale image proportionally to fit target width while keeping true aspect ratio
-    const targetWidth = 523; // Max width on page
+    // Scale image proportionally
+    const targetWidth = 523;
     const sigDims = sigImage.scale(targetWidth / sigImage.width);
 
-    // Position coordinates (in points, 72 points = 1 inch)
+    // Signature stamp placement
     const xPosition = 36;   
     const yPosition = 15;   
 
     // --- DRAW LINE AND TOTAL QTY ABOVE STAMP ZONE ---
-    const lineY = 175; // Adjust height to sit right above your signature/stamp image
+    // Raised lineY to 270 so it sits ABOVE "Goods Received in Good Condition and Order"
+    const lineY = 270; 
 
     // 1. Draw horizontal line across page margins
     lastPage.drawLine({
@@ -42,12 +44,13 @@ app.post('/stamp-pdf', upload.fields([
       color: rgb(0, 0, 0),
     });
 
-    // 2. Draw Total Qty text right above the line (aligned to right side)
+    // 2. Draw Total Qty text right above the line
     if (totalQty) {
       lastPage.drawText(`Total : ${totalQty}`, {
         x: width - 180,
         y: lineY + 8,
         size: 10,
+        font: helveticaBold,
         color: rgb(0, 0, 0),
       });
     }
