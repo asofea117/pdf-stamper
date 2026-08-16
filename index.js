@@ -36,7 +36,7 @@ app.post('/stamp-pdf', upload.any(), async (req, res) => {
 
     // Signature stamp placement
     const xPosition = 36;   
-    const yPosition = 15;   
+    const yPosition = 81; // <-- CHANGED FROM 15 TO 81 FOR 1958x583 CROP
 
     // --- DRAW LINE AND TOTAL QTY ABOVE STAMP ZONE ---
     const lineY = 270; 
